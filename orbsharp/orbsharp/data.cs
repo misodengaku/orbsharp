@@ -302,4 +302,12 @@ namespace Orb
 		}
 			
 	}
+
+	public class Geographic
+	{
+		public double longitute { get; set; }
+		public double latitute { get; set; }
+		public double altitude { get; set; }
+		public double velocity { get; set; }
+	}
 }
