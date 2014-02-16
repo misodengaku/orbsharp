@@ -46,7 +46,7 @@ namespace Orb
 			}
 		}
 
-		public int Hour
+		public int Hours
 		{
 			get
 			{

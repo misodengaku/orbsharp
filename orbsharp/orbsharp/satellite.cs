@@ -147,12 +147,12 @@ namespace Orb
 			return sgp;
 		}
 
-		private double CalculateTsince(DateTime time, OrbitalElements orbital_elements)
+		private double CalculateTsince(Time time, OrbitalElements orbital_elements)
 		{
 			var epoch_year = orbital_elements.EpochYear;
 			var epoch = orbital_elements.Epoch;
 			var year2 = epoch_year - 1;
-			var now_sec = new DateTime(time.Year, time.Month - 1, time.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Utc);
+			var now_sec = new DateTime(time.Year, time.Month - 1, time.Day, time.Hours, time.Minutes, time.Seconds, DateTimeKind.Utc);
 			var epoch_sec = new DateTime(year2, 11, 31, 0, 0, 0, DateTimeKind.Utc);
 			epoch_sec.AddSeconds(epoch * 24 * 60 * 60);
 			
@@ -160,7 +160,7 @@ namespace Orb
 			return elapsed_time;
 		}
 
-		private SGP4CalculatedData ExecuteSGP4(DateTime time, SGP4ExecuteData sgp4)
+		private SGP4CalculatedData ExecuteSGP4(Time time, SGP4ExecuteData sgp4)
 		{
 			var calculated = new SGP4CalculatedData();
 
@@ -326,15 +326,62 @@ namespace Orb
 			var ydot = rdotk * uy + rfdotk * vy;
 			var zdot = rdotk * uz + rfdotk * vz;
 
-			var xkm = (x * xkmper);
-			var ykm = (y * xkmper);
-			var zkm = (z * xkmper);
-			var xdotkmps = (xdot * xkmper / 60);
-			var ydotkmps = (ydot * xkmper / 60);
-			var zdotkmps = (zdot * xkmper / 60);
+
+			calculated.x = (x * xkmper);
+			calculated.y = (y * xkmper);
+			calculated.z = (z * xkmper);
+			calculated.xdot = (xdot * xkmper / 60);
+			calculated.ydot = (ydot * xkmper / 60);
+			calculated.zdot = (zdot * xkmper / 60);
 
 
 			return calculated;
+		}
+
+		private Geographic CalculatedDataToGeographic(Time _time, SGP4CalculatedData rect)
+		{
+			var time = _time;
+			var xkm = rect.x;
+			var ykm = rect.y;
+			var zkm = rect.z;
+			var xdotkmps = rect.xdot;
+			var ydotkmps = rect.ydot;
+			var zdotkmps = rect.zdot;
+			var rad = Math.PI / 180;
+			var gmst = time.Gmst;
+			var lst = gmst * 15;
+			var f = 0.00335277945; //Earth's flattening term in WGS-72 (= 1/298.26)
+			var a = 6378.135;	//Earth's equational radius in WGS-72 (km)
+			var r = Math.Sqrt(xkm * xkm + ykm * ykm);
+			var lng = Math.Atan2(ykm, xkm) / rad - lst;
+			if (lng > 360)
+				lng = lng % 360;
+			if (lng < 0)
+				lng = lng % 360 + 360;
+			if (lng > 180)
+				lng = lng - 360;
+
+			var lat = Math.Atan2(zkm, r);
+			var e2 = f * (2 - f);
+			var tmp_lat = 0.0;
+			double c;
+
+			do
+			{
+				tmp_lat = lat;
+				var sin_lat = Math.Sin(tmp_lat);
+				c = 1 / Math.Sqrt(1 - e2 * sin_lat * sin_lat);
+				lat = Math.Atan2(zkm + a * c * e2 * (Math.Sin(tmp_lat)), r);
+			} while (Math.Abs(lat - tmp_lat) > 0.0001);
+			var alt = r / Math.Cos(lat) - a * c;
+			var v = Math.Sqrt(xdotkmps * xdotkmps + ydotkmps * ydotkmps + zdotkmps * zdotkmps);
+
+			var geo = new Geographic();
+			geo.longitute = lng;
+			geo.latitute = lat / rad;
+			geo.altitude = alt;
+			geo.velocity = v;
+			return geo;
 		}
     }
 }
