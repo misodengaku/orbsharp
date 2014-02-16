@@ -7,7 +7,7 @@
     <ProjectGuid>{DF1BCAC5-5471-4422-B04F-520A1AE5C5BB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>orbsharp</RootNamespace>
+    <RootNamespace>Orb</RootNamespace>
     <AssemblyName>orbsharp</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -39,7 +39,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="core.cs" />
+    <Compile Include="data.cs" />
+    <Compile Include="satellite.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
