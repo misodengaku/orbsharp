@@ -266,15 +266,15 @@ namespace Orb
 			var epy = int.Parse(tle.FirstLine.Substring(18, 20));
 			if (epy < 57)
 			{
-				var epoch_year = epy + 2000;
+				epoch_year = epy + 2000;
 			}
 			else
 			{
-				var epoch_year = epy + 1900;
+				epoch_year = epy + 1900;
 			}
-			var bstar_mantissa = double.Parse(tle.FirstLine.Substring(53, 59)) * 1e-5;
-			var bstar_exponent = double.Parse("1e" + double.Parse(tle.FirstLine.Substring(59, 61)));
-			var bstar = bstar_mantissa * bstar_exponent;
+			bstar_mantissa = double.Parse(tle.FirstLine.Substring(53, 59)) * 1e-5;
+			bstar_exponent = double.Parse("1e" + double.Parse(tle.FirstLine.Substring(59, 61)));
+			bstar = bstar_mantissa * bstar_exponent;
 
 			//slice
 			line_number_1 = int.Parse(tle.FirstLine.Substring(0, 0));

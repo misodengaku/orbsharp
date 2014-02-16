@@ -8,7 +8,6 @@ namespace Orb
 {
     public class Satellite
     {
-		string line1, line2;
 		OrbitalElements ele;
 
 		public Satellite (TLE tle)
