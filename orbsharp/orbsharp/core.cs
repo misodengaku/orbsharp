@@ -329,4 +329,29 @@ namespace Orb
 			et = GetEt();
 		}
 	}
+
+	/*
+	public class Position
+	{
+		public object EquatorialToRectangular
+		{
+			get
+			{
+				
+			  if(obj.position.equatorial){
+				var ra = obj.position.equatorial.ra;
+				var dec = obj.position.equatorial.dec;
+				var distance = obj.position.equatorial.distance;
+			  }
+			  var value = {};
+			  var rad=Math.PI/180;
+			  obj.position.rectangular = {};
+			  obj.position.rectangular.x = distance*Math.cos(dec*rad)*Math.cos(ra*rad);
+			  obj.position.rectangular.y = distance*Math.cos(dec*rad)*Math.sin(ra*rad);
+			  obj.position.rectangular.z = distance*Math.sin(dec*rad);
+			  return obj;
+			}
+		}
+	}
+	*/
 }

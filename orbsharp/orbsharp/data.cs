@@ -23,25 +23,28 @@ namespace Orb
 				return name;
 			}
 		}
-		public string BstarExponent
+		public double BstarExponent
 		{
 			get
 			{
 				return bstar_exponent;
 			}
 		}
-		public string Bstar
+		public double Bstar
 		{
 			get
 			{
 				return bstar;
 			}
 		}
-		public string EpochYear
+		public int EpochYear
 		{
-			get { return epoch_year; }
+			get
+			{
+				return epoch_year;
+			}
 		}
-		public string BstarMantissa
+		public double BstarMantissa
 		{
 			get
 			{
@@ -191,14 +194,27 @@ namespace Orb
 		}
 		#endregion
 
-		string name, epoch_year, bstar_mantissa, bstar_exponent, bstar;
+		string name;
+		double bstar_mantissa, bstar_exponent, bstar;
 		int line_number_1, catalog_no_1, security_classification, international_identification, epoch, first_derivative_mean_motion;
-		int second_derivative_mean_motion, ephemeris_type, element_number, check_sum_1, line_number_2, catalog_no_2;
+		int second_derivative_mean_motion, ephemeris_type, element_number, check_sum_1, line_number_2, catalog_no_2, epoch_year;
 		int inclination, right_ascension, eccentricity, argument_of_perigee, mean_anomaly, mean_motion, rev_number_at_epoch, check_sum_2;
 
 		public OrbitalElements(TLE tle)
 		{
 			name = tle.Name;
+			var epy = int.Parse(tle.FirstLine.Substring(18, 20));
+			if (epy < 57)
+			{
+				var epoch_year = epy + 2000;
+			}
+			else
+			{
+				var epoch_year = epy + 1900;
+			}
+			var bstar_mantissa = double.Parse(tle.FirstLine.Substring(53, 59)) * 1e-5;
+			var bstar_exponent = double.Parse("1e" + double.Parse(tle.FirstLine.Substring(59, 61)));
+			var bstar = bstar_mantissa * bstar_exponent;
 
 			//slice
 			line_number_1 = int.Parse(tle.FirstLine.Substring(0, 0));
