@@ -21,14 +21,14 @@ namespace orbsharp_test
 		private void button1_Click(object sender, EventArgs e)
 		{
 			var tle = textBox1.Text.Split(new char[] { '\n' });
-			var sat = new Satellite(tle);
-			var lat = sat.CalculatedData.position.geographic.latitute;
-			var lon = sat.CalculatedData.position.geographic.latitute;
-			var alt = sat.CalculatedData.position.geographic.latitute;
-			textBox2.Text = "Satellite\n";
-			textBox2.Text += "Longitude: " + lon + "\n";
-			textBox2.Text += "Latitude: " + lat + "\n";
-			textBox2.Text += "Altitude: " + alt + "\n";
+			var sat = new Satellite(tle, new DateTime(2014, 2, 17));
+			var lat = sat.CalculatedData.position.geographic.latitude;
+			var lon = sat.CalculatedData.position.geographic.longitude;
+			var alt = sat.CalculatedData.position.geographic.altitude;
+			textBox2.Text = "Satellite\r\n";
+			textBox2.Text += "Longitude: " + lon + "\r\n";
+			textBox2.Text += "Latitude: " + lat + "\r\n";
+			textBox2.Text += "Altitude: " + alt + "\r\n";
 
 		}
 	}

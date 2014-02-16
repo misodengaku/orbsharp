@@ -90,7 +90,7 @@ namespace Orb
 		{
 			get
 			{
-				return jd;
+				return GetJulianDay();
 			}
 		}
 
@@ -98,7 +98,7 @@ namespace Orb
 		{
 			get
 			{
-				return mjd;
+				return GetMJD();
 			}
 		}
 
@@ -106,7 +106,7 @@ namespace Orb
 		{
 			get
 			{
-				return tjd;
+				return GetTJD(); ;
 			}
 		}
 
@@ -114,7 +114,7 @@ namespace Orb
 		{
 			get
 			{
-				return delta_t;
+				return GetDeltaT();
 			}
 		}
 
@@ -122,7 +122,7 @@ namespace Orb
 		{
 			get
 			{
-				return gmst;
+				return GetGmst();
 			}
 		}
 
@@ -130,7 +130,7 @@ namespace Orb
 		{
 			get
 			{
-				return et;
+				return GetEt();
 			}
 		}
 
@@ -142,15 +142,16 @@ namespace Orb
 		{
 			var _month = date.Month;
 			var _year = date.Year;
+			var _day = date.Day;
 			var calender = ""; // ???
 			var transition_offset = 0;
 
 			if (month <= 2)
 			{
-				_year = year - 1;
-				_month = month + 12;
+				_year = _year - 1;
+				_month = _month + 12;
 			}
-			var julian_day = Math.Floor(365.25 * (_year + 4716)) + Math.Floor(30.6001 * (_month + 1)) + day - 1524.5;
+			var julian_day = Math.Floor(365.25 * (_year + 4716)) + Math.Floor(30.6001 * (_month + 1)) + _day - 1524.5;
 
 			if (calender == "julian")
 			{
@@ -309,24 +310,27 @@ namespace Orb
 
 		public Time(DateTime _date)
 		{
+			if (_date == null)
+				_date = DateTime.Now;
 			var tzi = TimeZoneInfo.Local;
 			date = _date.ToUniversalTime();
 			timezone = tzi.GetUtcOffset(_date);
 
 			year = date.Year;
-			month = date.Month;
+			month = date.Month + 1;
 			day = date.Day;
 			hours = date.Hour;
 			minutes = date.Minute;
 			seconds = date.Second;
 			miliseconds = date.Millisecond;
-
+			/*
 			jd = GetJulianDay();
 			gmst = GetGmst();
 			mjd = GetMJD();
 			tjd = GetTJD();
 			delta_t = GetDeltaT();
 			et = GetEt();
+			 */
 		}
 	}
 

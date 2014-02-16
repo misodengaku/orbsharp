@@ -9,13 +9,43 @@ namespace Orb
     public class Satellite
     {
 		OrbitalElements ele;
+		SatelliteData satellite;
+
+		public SatelliteData CalculatedData
+		{
+			get{
+				return satellite;
+			}
+		}
+
+		public Satellite (TLE tle, DateTime _date)
+		{
+			ele = new OrbitalElements(tle);
+
+			Calculate(_date);
+		}
+
+		public Satellite (string[] _tle, DateTime _date)
+		{
+			var time = new Time(_date);
+			var tle = new TLE();
+			tle.Name = _tle[0];
+			tle.FirstLine = _tle[1];
+			tle.SecondLine = _tle[2];
+
+			ele = new OrbitalElements(tle);
+
+			Calculate(_date);
+		}
 
 		public Satellite (TLE tle)
 		{
 			ele = new OrbitalElements(tle);
+
+			Calculate();
 		}
 
-		public Satellite (string[] _tle)
+		public Satellite(string[] _tle)
 		{
 			var tle = new TLE();
 			tle.Name = _tle[0];
@@ -23,11 +53,45 @@ namespace Orb
 			tle.SecondLine = _tle[2];
 
 			ele = new OrbitalElements(tle);
+			Calculate();
+		}
+
+		/// <summary>
+		/// システムの現在時刻を使用して衛星の位置を計算します。
+		/// </summary>
+		/// <returns></returns>
+		public SatelliteData Calculate()
+		{
+			return Calculate(DateTime.Now);
+		}
+
+		/// <summary>
+		/// 指定された日時を使用して衛星の位置を計算します。
+		/// </summary>
+		/// <param name="_date"></param>
+		/// <returns></returns>
+		public SatelliteData Calculate(DateTime _date)
+		{
+			var time = new Time(_date);
+
+			var sgp4 = SetSGP4(ele);
+			satellite = new SatelliteData();
+			satellite.elements = ele;
+			satellite.epoch_in_date = sgp4.epoch_in_date;
+			satellite.orbital_period = sgp4.orbital_period;
+			satellite.apogee = sgp4.apoge;
+			satellite.perigee = sgp4.perige;
+			satellite.position = new Position();
+			var execSGP4 = ExecuteSGP4(time, sgp4);
+			satellite.position.rectangular = execSGP4;
+			satellite.position.geographic = CalculatedDataToGeographic(time, execSGP4);
+			return satellite;
 		}
 
 		private SGP4ExecuteData SetSGP4(OrbitalElements orbital_elements)
 		{
 			var sgp = new SGP4ExecuteData();
+			sgp.orbital_elements = orbital_elements;
 			var torad = Math.PI / 180;
 			var ck2 = 5.413080e-4;
 			var ck4 = 0.62098875e-6;
@@ -37,7 +101,7 @@ namespace Orb
 			var tothrd = 0.66666667;
 			var xj3 = -0.253881e-5;
 			var xke = 0.743669161e-1;
-			var xkmper = 6378.135;
+			sgp.xkmper = 6378.135;
 			var xmnpda = 1440.0; // min_par_day
 			var ae = 1.0;
 			var pi = Math.PI;
@@ -71,15 +135,15 @@ namespace Orb
 			sgp.orbital_period = 1440.0 / orbital_elements.MeanMotion;
 
 			sgp.isimp = 0;
-			if ((sgp.aodp * (1.0 - sgp.eo) / ae) < (220.0 / xkmper + ae))
+			if ((sgp.aodp * (1.0 - sgp.eo) / ae) < (220.0 / sgp.xkmper + ae))
 			{
 				sgp.isimp = 1;
 			}
 
 			var s4 = s;
 			var qoms24 = qoms2t;
-			sgp.perige = (sgp.aodp * (1.0 - sgp.eo) - ae) * xkmper;
-			sgp.apoge = (sgp.aodp * (1.0 + sgp.eo) - ae) * xkmper;
+			sgp.perige = (sgp.aodp * (1.0 - sgp.eo) - ae) * sgp.xkmper;
+			sgp.apoge = (sgp.aodp * (1.0 + sgp.eo) - ae) * sgp.xkmper;
 			if (sgp.perige < 156.0)
 			{
 				s4 = sgp.perige - 78.0;
@@ -89,8 +153,8 @@ namespace Orb
 				}
 				else
 				{
-					qoms24 = Math.Pow(((120.0 - s4) * ae / xkmper), 4);
-					s4 = s4 / xkmper + ae;
+					qoms24 = Math.Pow(((120.0 - s4) * ae / sgp.xkmper), 4);
+					s4 = s4 / sgp.xkmper + ae;
 				}
 			}
 			var pinvsq = 1.0 / (sgp.aodp * sgp.aodp * betao2 * betao2);
@@ -141,7 +205,8 @@ namespace Orb
 				sgp.t4cof = 0.25 * (3.0 * sgp.d3 + sgp.c1 * (12.0 * sgp.d2 + 10.0 * c1sq));
 				sgp.t5cof = 0.2 * (3.0 * sgp.d4 + 12.0 * sgp.c1 * sgp.d3 + 6.0 * sgp.d2 * sgp.d2 + 15.0 * c1sq * (2.0 * sgp.d2 + c1sq));
 			}
-			sgp.epoch_in_date = new DateTime(sgp.epoch_year - 1, 11, 31, 0, 0, 0, DateTimeKind.Utc);
+			//sgp.epoch_in_date = new DateTime(sgp.epoch_year - 1, 11, 31, 0, 0, 0, DateTimeKind.Utc);
+			sgp.epoch_in_date = new DateTime(sgp.epoch_year - 1, 12, 1, 0, 0, 0, DateTimeKind.Utc);
 			sgp.epoch_in_date.AddSeconds(sgp.epoch * 24 * 60 * 60);
 
 			return sgp;
@@ -152,11 +217,16 @@ namespace Orb
 			var epoch_year = orbital_elements.EpochYear;
 			var epoch = orbital_elements.Epoch;
 			var year2 = epoch_year - 1;
-			var now_sec = new DateTime(time.Year, time.Month - 1, time.Day, time.Hours, time.Minutes, time.Seconds, DateTimeKind.Utc);
-			var epoch_sec = new DateTime(year2, 11, 31, 0, 0, 0, DateTimeKind.Utc);
-			epoch_sec.AddSeconds(epoch * 24 * 60 * 60);
-			
-			var elapsed_time = (now_sec - epoch_sec).TotalMilliseconds / (60 * 1000);
+			//var now_sec = new DateTime(time.Year, time.Month - 1, time.Day, time.Hours, time.Minutes, time.Seconds, DateTimeKind.Utc);
+			var now_sec = (new DateTime(time.Year, time.Month - 1, time.Day, time.Hours, time.Minutes, time.Seconds, DateTimeKind.Utc)
+				- new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds ;
+			//var epoch_sec = new DateTime(year2, 11, 31, 0, 0, 0, DateTimeKind.Utc);
+			var epoch_sec = (new DateTime(year2, 11, 30, 23, 59, 59, DateTimeKind.Utc)
+				- new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds + 1000 + 2592000000;
+			//epoch_sec = epoch_sec.Add(new TimeSpan(0, 0, epoch ));
+			epoch_sec += epoch * 24 * 60 * 60 * 1000;
+			var el_milsec = (now_sec - epoch_sec);
+			var elapsed_time = el_milsec / (60 * 1000);
 			return elapsed_time;
 		}
 
@@ -289,7 +359,7 @@ namespace Orb
 			if (u < 0) { u += 2 * Math.PI; }
 			var sin2u = 2.0 * sinu * cosu;
 			// var cos2u=2.0*cosu*cosu-1.; // ???
-			var cos2u = 2.0 * cosu * cosu - 1.0;
+			var cos2u = 2.0 * cosu * (cosu - 1.0);
 			temp = 1.0 / pl;
 			temp1 = ck2 * temp;
 			temp2 = temp1 * temp;
@@ -377,8 +447,8 @@ namespace Orb
 			var v = Math.Sqrt(xdotkmps * xdotkmps + ydotkmps * ydotkmps + zdotkmps * zdotkmps);
 
 			var geo = new Geographic();
-			geo.longitute = lng;
-			geo.latitute = lat / rad;
+			geo.longitude = lng;
+			geo.latitude = lat / rad;
 			geo.altitude = alt;
 			geo.velocity = v;
 			return geo;
