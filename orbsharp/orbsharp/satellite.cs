@@ -26,9 +26,9 @@ namespace Orb
 			ele = new OrbitalElements(tle);
 		}
 
-		private SGP4Data SetSGP4(OrbitalElements orbital_elements)
+		private SGP4ExecuteData SetSGP4(OrbitalElements orbital_elements)
 		{
-			var sgp = new SGP4Data();
+			var sgp = new SGP4ExecuteData();
 			var torad = Math.PI / 180;
 			var ck2 = 5.413080e-4;
 			var ck4 = 0.62098875e-6;
@@ -146,6 +146,196 @@ namespace Orb
 			sgp.epoch_in_date.AddSeconds(sgp.epoch * 24 * 60 * 60);
 
 			return sgp;
+		}
+
+		private double CalculateTsince(DateTime time, OrbitalElements orbital_elements)
+		{
+			var epoch_year = orbital_elements.EpochYear;
+			var epoch = orbital_elements.Epoch;
+			var year2 = epoch_year - 1;
+			var now_sec = new DateTime(time.Year, time.Month - 1, time.Day, time.Hour, time.Minute, time.Second, DateTimeKind.Utc);
+			var epoch_sec = new DateTime(year2, 11, 31, 0, 0, 0, DateTimeKind.Utc);
+			epoch_sec.AddSeconds(epoch * 24 * 60 * 60);
+			
+			var elapsed_time = (now_sec - epoch_sec).TotalMilliseconds / (60 * 1000);
+			return elapsed_time;
+		}
+
+		private SGP4CalculatedData ExecuteSGP4(DateTime time, SGP4ExecuteData sgp4)
+		{
+			var calculated = new SGP4CalculatedData();
+
+			var rad = Math.PI / 180;
+			var orbital_elements = sgp4.orbital_elements;
+			var tsince = CalculateTsince(time, orbital_elements);
+
+			var xmo = sgp4.xmo;
+			var xmdot = sgp4.xmdot;
+			var omegao = sgp4.omegao;
+			var omgdot = sgp4.omgdot;
+			var xnodeo = sgp4.xnodeo;
+			var xnodot = sgp4.xnodot;
+			var xnodcf = sgp4.xnodcf;
+			var bstar = sgp4.bstar;
+			var t2cof = sgp4.t2cof;
+			var omgcof = sgp4.omgcof;
+			var isimp = sgp4.isimp;
+			var xmcof = sgp4.xmcof;
+			var eta = sgp4.eta;
+			var delmo = sgp4.delmo;
+			var c1 = sgp4.c1;
+			var c4 = sgp4.c4;
+			var c5 = sgp4.c5;
+			var d2 = sgp4.d2;
+			var d3 = sgp4.d3;
+			var d4 = sgp4.d4;
+			var sinmo = sgp4.sinmo;
+			var t3cof = sgp4.t3cof;
+			var t4cof = sgp4.t4cof;
+			var t5cof = sgp4.t5cof;
+			var aodp = sgp4.aodp;
+			var eo = sgp4.eo;
+			var xnodp = sgp4.xnodp;
+			var xke = sgp4.xke;
+			var xlcof = sgp4.xlcof;
+			var aycof = sgp4.aycof;
+			var x3thm1 = sgp4.x3thm1;
+			var x1mth2 = sgp4.x1mth2;
+			var xincl = sgp4.xincl;
+			var cosio = sgp4.cosio;
+			var sinio = sgp4.sinio;
+			var e6a = sgp4.e6a;
+			var ck2 = sgp4.ck2;
+			var x7thm1 = sgp4.x7thm1;
+			var xkmper = sgp4.xkmper;
+			var epoch_year = sgp4.epoch_year;
+			var epoch = sgp4.epoch;
+
+			var xmdf = xmo + xmdot * tsince;
+			var omgadf = omegao + omgdot * tsince;
+			var xnoddf = xnodeo + xnodot * tsince;
+			var omega = omgadf;
+			var xmp = xmdf;
+			var tsq = tsince * tsince;
+			var xnode = xnoddf + xnodcf * tsq;
+			var tempa = 1.0 - c1 * tsince;
+			var tempe = bstar * c4 * tsince;
+			var templ = t2cof * tsq;
+			double temp;
+
+			if (isimp != 1)
+			{
+				var delomg = omgcof * tsince;
+				var delm = xmcof * (Math.Pow((1.0 + eta * Math.Cos(xmdf)), 3) - delmo);
+				temp = delomg + delm;
+				xmp = xmdf + temp;
+				omega = omgadf - temp;
+				var tcube = tsq * tsince;
+				var tfour = tsince * tcube;
+				tempa = tempa - d2 * tsq - d3 * tcube - d4 * tfour;
+				tempe = tempe + bstar * c5 * (Math.Sin(xmp) - sinmo);
+				templ = templ + t3cof * tcube + tfour * (t4cof + tsince * t5cof);
+			}
+			var a = aodp * tempa * tempa;
+			var e = eo - tempe;
+			var xl = xmp + omega + xnode + xnodp * templ;
+			var beta = Math.Sqrt(1.0 - e * e);
+			var xn = xke / Math.Pow(a, 1.5);
+
+			// long period periodics
+			var axn = e * Math.Cos(omega);
+			temp = 1.0 / (a * beta * beta);
+			var xll = temp * xlcof * axn;
+			var aynl = temp * aycof;
+			var xlt = xl + xll;
+			var ayn = e * Math.Sin(omega) + aynl;
+
+			// solve keplers equation
+			var capu = (xlt - xnode) % (2.0 * Math.PI);
+			var temp2 = capu;
+			double temp3 = 0, temp4 = 0, temp5 = 0, temp6 = 0;
+			double sinepw = 0, cosepw = 0;
+			for (var i = 1; i <= 10; i++)
+			{
+				sinepw = Math.Sin(temp2);
+				cosepw = Math.Cos(temp2);
+				temp3 = axn * sinepw;
+				temp4 = ayn * cosepw;
+				temp5 = axn * cosepw;
+				temp6 = ayn * sinepw;
+				var epw = (capu - temp4 + temp3 - temp2) / (1.0 - temp5 - temp6) + temp2;
+				if (Math.Abs(epw - temp2) <= e6a)
+				{
+					break;
+				};
+				temp2 = epw;
+			}
+			// short period preliminary quantities
+
+			var ecose = temp5 + temp6;
+			var esine = temp3 - temp4;
+			var elsq = axn * axn + ayn * ayn;
+			temp = 1.0 - elsq;
+			var pl = a * temp;
+			var r = a * (1.0 - ecose);
+			var temp1 = 1.0 / r;
+			var rdot = xke * Math.Sqrt(a) * esine * temp1;
+			var rfdot = xke * Math.Sqrt(pl) * temp1;
+			temp2 = a * temp1;
+			var betal = Math.Sqrt(temp);
+			temp3 = 1.0 / (1.0 + betal);
+			var cosu = temp2 * (cosepw - axn + ayn * esine * temp3);
+			var sinu = temp2 * (sinepw - ayn - axn * esine * temp3);
+			var u = Math.Atan2(sinu, cosu);
+			if (u < 0) { u += 2 * Math.PI; }
+			var sin2u = 2.0 * sinu * cosu;
+			// var cos2u=2.0*cosu*cosu-1.; // ???
+			var cos2u = 2.0 * cosu * cosu - 1.0;
+			temp = 1.0 / pl;
+			temp1 = ck2 * temp;
+			temp2 = temp1 * temp;
+
+			// update for short periodics
+
+			var rk = r * (1.0 - 1.5 * temp2 * betal * x3thm1) + 0.5 * temp1 * x1mth2 * cos2u;
+			var uk = u - 0.25 * temp2 * x7thm1 * sin2u;
+			var xnodek = xnode + 1.5 * temp2 * cosio * sin2u;
+			var xinck = xincl + 1.5 * temp2 * cosio * sinio * cos2u;
+			var rdotk = rdot - xn * temp1 * x1mth2 * sin2u;
+			var rfdotk = rfdot + xn * temp1 * (x1mth2 * cos2u + 1.5 * x3thm1);
+
+			// orientation vectors
+
+			var sinuk = Math.Sin(uk);
+			var cosuk = Math.Cos(uk);
+			var sinik = Math.Sin(xinck);
+			var cosik = Math.Cos(xinck);
+			var sinnok = Math.Sin(xnodek);
+			var cosnok = Math.Cos(xnodek);
+			var xmx = -sinnok * cosik;
+			var xmy = cosnok * cosik;
+			var ux = xmx * sinuk + cosnok * cosuk;
+			var uy = xmy * sinuk + sinnok * cosuk;
+			var uz = sinik * sinuk;
+			var vx = xmx * cosuk - cosnok * sinuk;
+			var vy = xmy * cosuk - sinnok * sinuk;
+			var vz = sinik * cosuk;
+			var x = rk * ux;
+			var y = rk * uy;
+			var z = rk * uz;
+			var xdot = rdotk * ux + rfdotk * vx;
+			var ydot = rdotk * uy + rfdotk * vy;
+			var zdot = rdotk * uz + rfdotk * vz;
+
+			var xkm = (x * xkmper);
+			var ykm = (y * xkmper);
+			var zkm = (z * xkmper);
+			var xdotkmps = (xdot * xkmper / 60);
+			var ydotkmps = (ydot * xkmper / 60);
+			var zdotkmps = (zdot * xkmper / 60);
+
+
+			return calculated;
 		}
     }
 }

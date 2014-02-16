@@ -13,6 +13,66 @@ namespace Orb
 		public string SecondLine { get; set; }
 	}
 
+	public class SGP4ExecuteData
+	{
+		public OrbitalElements orbital_elements { get; set; }
+		public double apoge { get; set; }
+		public double perige { get; set; }
+		public double orbital_period { get; set; }
+		public int epoch_year { get; set; }
+		public double epoch { get; set; }
+		public DateTime epoch_in_date { get; set; }
+		public double xmo { get; set; }
+		public double xmdot { get; set; }
+		public double omegao { get; set; }
+		public double omgdot { get; set; }
+		public double xnodeo { get; set; }
+		public double xnodot { get; set; }
+		public double xnodcf { get; set; }
+		public double bstar { get; set; }
+		public double t2cof { get; set; }
+		public double omgcof { get; set; }
+		public double isimp { get; set; }
+		public double xmcof { get; set; }
+		public double eta { get; set; }
+		public double delmo { get; set; }
+		public double c1 { get; set; }
+		public double c4 { get; set; }
+		public double c5 { get; set; }
+		public double d2 { get; set; }
+		public double d3 { get; set; }
+		public double d4 { get; set; }
+		public double sinmo { get; set; }
+		public double t3cof { get; set; }
+		public double t4cof { get; set; }
+		public double t5cof { get; set; }
+		public double aodp { get; set; }
+		public double eo { get; set; }
+		public double xnodp { get; set; }
+		public double xke { get; set; }
+		public double xlcof { get; set; }
+		public double aycof { get; set; }
+		public double x3thm1 { get; set; }
+		public double x1mth2 { get; set; }
+		public double xincl { get; set; }
+		public double cosio { get; set; }
+		public double sinio { get; set; }
+		public double e6a { get; set; }
+		public double ck2 { get; set; }
+		public double x7thm1 { get; set; }
+		public double xkmper { get; set; }
+	}
+
+	public class SGP4CalculatedData
+	{
+		public double x { get; set; }
+		public double y { get; set; }
+		public double z { get; set; }
+		public double xdot { get; set; }
+		public double ydot { get; set; }
+		public double zdot { get; set; }
+	}
+
 	public class OrbitalElements
 	{
 		#region Properties
