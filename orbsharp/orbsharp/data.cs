@@ -13,6 +13,25 @@ namespace Orb
 		public string SecondLine { get; set; }
 	}
 
+	/// <summary>
+	/// 直交座標を表します。
+	/// </summary>
+	public class Rectangle
+	{
+		public double X { get; set; }
+		public double Y { get; set; }
+		public double Z { get; set; }
+
+		public Rectangle();
+
+		public Rectangle(double X, double Y, double Z)
+		{
+			this.X = X;
+			this.Y = Y;
+			this.Z = Z;
+		}
+	}
+
 	public class SGP4ExecuteData
 	{
 		public OrbitalElements orbital_elements { get; set; }
@@ -260,7 +279,7 @@ namespace Orb
 		int line_number_1, catalog_no_1;
 		int ephemeris_type, element_number, check_sum_1, line_number_2, catalog_no_2, epoch_year;
 		int eccentricity, rev_number_at_epoch, check_sum_2;
-
+		
 		public OrbitalElements(TLE tle)
 		{
 			name = tle.Name;
@@ -308,6 +327,7 @@ namespace Orb
 			
 	}
 
+
 	public class Geographic
 	{
 		public double longitude { get; set; }
@@ -345,5 +365,35 @@ namespace Orb
 	{
 		public SGP4CalculatedData rectangular { get; set; }
 		public Geographic geographic { get; set; }
+
+
+	}
+
+	/// <summary>
+	/// 衛星を観測する地点を表します。
+	/// </summary>
+	public class SatelliteObserver
+	{
+		public double Latitude { get; set; }
+		public double Longitude { get; set; }
+		public double Altitude { get; set; }
+
+		/// <summary>
+		/// 設定された地点を直交座標に変換して返します。
+		/// </summary>
+		/// <returns></returns>
+		public Rectangle ToRectangular()
+		{
+			var rad = Math.PI / 180;
+			var a = 6377.39715500; // earth radius
+			var e2 = 0.006674372230614;
+
+			var n = a / (Math.Sqrt(1 - e2 * Math.Cos(Latitude * rad)));
+			var x = (n + Altitude) * Math.Cos(Latitude * rad) * Math.Cos(Longitude * rad);
+			var y = (n + Altitude) * Math.Cos(Latitude * rad) * Math.Sin(Longitude * rad);
+			var z = (n * (1 - e2) + Altitude) * Math.Sin(Latitude * rad);
+			var r = new Rectangle(x, y, z);
+			return r;
+		}
 	}
 }
