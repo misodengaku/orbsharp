@@ -212,21 +212,23 @@ namespace Orb
 			return sgp;
 		}
 
+		/// <summary>
+		/// 元期からの経過時間を計算し、分で返します
+		/// </summary>
+		/// <param name="time">求めたい時点</param>
+		/// <param name="orbital_elements">元期の含まれる軌道要素</param>
+		/// <returns></returns>
 		private double CalculateTsince(Time time, OrbitalElements orbital_elements)
 		{
 			var epoch_year = orbital_elements.EpochYear;
 			var epoch = orbital_elements.Epoch;
-			var year2 = epoch_year - 1;
-			//var now_sec = new DateTime(time.Year, time.Month - 1, time.Day, time.Hours, time.Minutes, time.Seconds, DateTimeKind.Utc);
-			var now_sec = (new DateTime(time.Year, time.Month - 1, time.Day, time.Hours, time.Minutes, time.Seconds, DateTimeKind.Utc)
-				- new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds ;
-			//var epoch_sec = new DateTime(year2, 11, 31, 0, 0, 0, DateTimeKind.Utc);
-			var epoch_sec = (new DateTime(year2, 11, 30, 23, 59, 59, DateTimeKind.Utc)
-				- new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds + 1000 + 2592000000;
-			//epoch_sec = epoch_sec.Add(new TimeSpan(0, 0, epoch ));
-			epoch_sec += epoch * 24 * 60 * 60 * 1000;
-			var el_milsec = (now_sec - epoch_sec);
-			var elapsed_time = el_milsec / (60 * 1000);
+
+			var now_sec = new DateTime(time.Year, time.Month, time.Day, time.Hours, time.Minutes, time.Seconds, DateTimeKind.Utc);
+
+			var epoch_sec = new DateTime(epoch_year - 1, 12, 31, 0, 0, 0, 0, DateTimeKind.Utc);
+			epoch_sec = epoch_sec.AddSeconds(epoch * 24 * 60 * 60);
+
+			var elapsed_time = (now_sec - epoch_sec).TotalMinutes;
 			return elapsed_time;
 		}
 

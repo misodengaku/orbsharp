@@ -316,6 +316,15 @@ namespace Orb
 			date = _date.ToUniversalTime();
 			timezone = tzi.GetUtcOffset(_date);
 
+
+			year = date.Year;
+			month = date.Month;
+			day = date.Day;
+			hours = date.Hour;
+			minutes = date.Minute;
+			seconds = date.Second;
+			miliseconds = date.Millisecond;
+			/*
 			year = date.Year;
 			month = date.Month + 1;
 			day = date.Day;
@@ -323,6 +332,7 @@ namespace Orb
 			minutes = date.Minute;
 			seconds = date.Second;
 			miliseconds = date.Millisecond;
+			*/
 			/*
 			jd = GetJulianDay();
 			gmst = GetGmst();

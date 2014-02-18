@@ -21,9 +21,9 @@ namespace orbsharp_test
 		private void button1_Click(object sender, EventArgs e)
 		{
 			var tle = textBox1.Text.Split(new char[] { '\n' });
-			var sat = new Satellite(tle, new DateTime(2014, 2, 17));
-			var lat = sat.CalculatedData.position.geographic.latitude;
+			var sat = new Satellite(tle, new DateTime(2013, 12, 31, 0, 0, 0, DateTimeKind.Utc));
 			var lon = sat.CalculatedData.position.geographic.longitude;
+			var lat = sat.CalculatedData.position.geographic.latitude;
 			var alt = sat.CalculatedData.position.geographic.altitude;
 			textBox2.Text = "Satellite\r\n";
 			textBox2.Text += "Longitude: " + lon + "\r\n";
